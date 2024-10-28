@@ -1,0 +1,46 @@
+#EXAMPLE dockerfile ready for deplyement
+
+# 1. Specify the base image
+FROM continuumio/miniconda3:latest
+
+# 2. Set working directory inside the container
+WORKDIR /app
+
+# 3. Copy environment files (e.g., conda environment files)
+COPY .env/environment.yml /tmp/environment.yml
+
+# 4. Set environment variables (you can load them from a .env file as well)
+# Assuming your Flask app reads .env for secrets
+ENV FLASK_APP=main.py \
+    FLASK_ENV=production \
+    CONDA_DEFAULT_ENV=myenv
+
+# 5. Install conda environment dependencies
+RUN conda env create -f /tmp/environment.yml
+
+# 6. Activate conda environment (use shell mode to keep it active)
+SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
+
+# 7. Install additional production dependencies (if any)
+RUN pip install gunicorn
+
+# 8. Copy the app code into the container
+COPY . /app
+
+# 9. Expose the necessary port for Flask (or Gunicorn)
+EXPOSE 8000
+
+# 10. Create a health check to verify container health
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl --fail http://localhost:8000 || exit 1
+
+# 11. Use gunicorn as the production WSGI server
+# Use multi-threading or worker processes based on your app's needs
+ENTRYPOINT ["gunicorn", "--bind", "0.0.0.0:8000", "main:app", "--workers", "4", "--threads", "2"]
+
+# 12. Clean up conda cache to minimize image size
+RUN conda clean --all --yes
+
+# Optional: Label the image (for metadata)
+LABEL maintainer="your_email@example.com" \
+      version="1.0" \
+      description="Flask app with conda environment for deployment"

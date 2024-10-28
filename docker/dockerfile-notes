@@ -1,0 +1,129 @@
+Instruction	Description
+ADD	Add local or remote files and directories.
+ARG	Use build-time variables.
+CMD	Specify default commands.
+COPY	Copy files and directories.
+ENTRYPOINT	Specify default executable.
+ENV	Set environment variables.
+EXPOSE	Describe which ports your application is listening on.
+FROM	Create a new build stage from a base image.
+HEALTHCHECK	Check a container s health on startup.
+LABEL	Add metadata to an image.
+MAINTAINER	Specify the author of an image.
+ONBUILD	Specify instructions for when the image is used in a build.
+RUN	Execute build commands.
+SHELL	Set the default shell of an image.
+STOPSIGNAL	Specify the system call signal for exiting a container.
+USER	Set user and group ID.
+VOLUME	Create volume mounts.
+WORKDIR	Change working directory.
+
+
+
+"""
+MINIMUM OF DOCKER FILES
+"""
+# A Dockerfile must begin with a FROM instruction.
+RUN echo 'we are running some # of cool things'
+
+
+
+
+"""
+DIRECTIVEs
+"""
+# Directives should be at top of file and control 3 things: synthax, escape, check (v 1.8.0)
+# They look like this:
+
+# syntax=docker/dockerfile:1  (this is the latest stable version so what most user will use)
+# escape=\                    (The escape directive sets the character used to escape characters in a Dockerfile. If not specified, the default escape character is \.)
+
+"Useful for windows"
+# escape=`
+
+FROM microsoft/nanoserver
+COPY testfile.txt c:\
+RUN dir c:\
+
+# check=skip=<checks|all>
+# check=error=<boolean>
+"By default, all checks are ran and failures are treated as warning"
+# check=skip=JSONArgsRecommended,StageNameCasing (skip mutiple checks)
+# check=skip=all (skip all checks)
+# check=error=true  (exit on warnings - stop build)
+# check=skip=JSONArgsRecommended;error=true (combine two lines in one)
+
+
+
+"""
+ENVIRONMENT
+"""
+FROM busybox
+ENV FOO=/bar 
+WORKDIR ${FOO}   # WORKDIR /bar
+ADD . $FOO       # ADD . /bar
+COPY \$FOO /quux # COPY $FOO /quux
+
+
+"""
+.dockerignore (put files you don't want dokcer to copy in here)
+like this
+"""
+# .dockerignore
+node_modules
+bar
+
+
+"""
+SHELL AND ENTRYPOINT
+(if image doesn't have a shell, use entrypont because it uses exec function)
+CMD for setting default arguments that can be overridden at runtime | The CMD instruction specifies the default command to run when a container is started from the Docker image.
+The RUN instruction is used in Dockerfiles to execute commands that build and configure the Docker image.
+	
+RUN apt update && apt -y install apache2
+
+CMD ["apache2ctl", "-DFOREGROUND"]
+Users can start the container with docker run -it <image> /bin/bash to get a Bash shell instead of starting Apache.  
+Note: Use ENTRYPOINT when you need your container to always run the same base command, and you want to allow users to append additional commands at the end. 
+One caveat is that ENTRYPOINT can be overridden on the docker run command line by supplying the --entrypoint flag. ENTRYPOINT is useful to turn container in standalone executable
+"""
+The RUN, CMD, and ENTRYPOINT instructions all have two possible forms:
+
+    INSTRUCTION ["executable","param1","param2"] (exec form)
+    INSTRUCTION command param1 param2 (shell form)
+
+
+# In the shell form, the command is run in a subshell, typically /bin/sh -c on Linux systems. 
+# This form is useful because it allows shell processing (like variable expansion, wildcards, etc.), making it more flexible for certain types of commands (see this shell scripting article for examples of shell processing). 
+# However, it also means that the process running your command isn’t the container’s PID 1, which can lead to issues with signal handling because signals sent by Docker (like SIGTERM for graceful shutdowns) are received by the shell rather than the intended process.
+
+# The exec form does not invoke a command shell. This means the command you specify is executed directly as the container’s PID 1, which is important for correctly handling signals sent to the container. 
+# Additionally, this form does not perform shell expansions, so it’s more secure and predictable, especially for specifying arguments or commands from external sources.
+
+
+
+"""
+SHELL
+"""
+You can change the default shell using the SHELL command. For example:
+
+SHELL ["/bin/bash", "-c"]
+RUN echo hello
+
+"""
+LABEL
+"""
+The LABEL instruction adds metadata to an image
+LABEL "com.example.vendor"="ACME Incorporated"
+LABEL com.example.label-with-value="foo"
+LABEL version="1.0"
+LABEL description="This text illustrates \
+that label-values can span multiple lines."
+
+
+
+"""
+EXPOSE
+"""
+The EXPOSE instruction informs Docker that the container listens on the specified network ports at runtime. You can specify whether the port listens on TCP or UDP, and the default is TCP if you don't specify a protocol.
+EXPOSE <port> [<port>/<protocol>...]
