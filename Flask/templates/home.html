@@ -1,0 +1,10 @@
+<!doctype html>
+<title>Hello from Flask</title>
+{% if person %}
+  <h1>Hello {{ person }}!</h1>
+{% else %}
+  <h1>Hello, World!</h1>
+{% endif %}
+<!--
+Inside templates you also have access to the config, request, session and g [1] objects as well as the url_for() and get_flashed_messages() functions.
+-->
